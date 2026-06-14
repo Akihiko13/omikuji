@@ -167,7 +167,7 @@
 
     <p class="comment" id="comment"></p>
 
-    <button class="draw-btn" id="btn" onclick="draw()">引く</button>
+    <button class="draw-btn" id="btn" onclick="draw()">🎋 おみくじを引く</button>
   </div>
 
   <script>
@@ -241,7 +241,7 @@
             label.textContent = result.label;
             comment.innerHTML = result.comment.replace(/\n/g, '<br>');
             comment.classList.add('visible');
-            btn.textContent  = 'もう一度引く';
+            btn.textContent  = '🎋 もう一度引く';
             btn.disabled     = false;
           }, 120);
         }
