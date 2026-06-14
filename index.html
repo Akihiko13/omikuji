@@ -152,6 +152,34 @@
 
     .kyo       { border-color: #888 !important; }
     .kyo       .result-label { color: #666; }
+
+    .lucky-link {
+      display: block;
+      text-align: center;
+      padding: 13px 32px;
+      border: 0.5px solid #d0cdc8;
+      border-radius: 50px;
+      font-size: 15px;
+      font-weight: 500;
+      color: #1a1a1a;
+      text-decoration: none;
+      letter-spacing: 0.06em;
+      background: #fff;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(8px);
+      transition: opacity 0.4s ease, transform 0.4s ease, background 0.15s;
+    }
+
+    .lucky-link.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    .lucky-link:hover {
+      background: #f0ede8;
+    }
   </style>
 </head>
 <body>
@@ -168,6 +196,10 @@
     <p class="comment" id="comment"></p>
 
     <button class="draw-btn" id="btn" onclick="draw()">🎋 おみくじを引く</button>
+
+    <a class="lucky-link" id="luckyLink" href="lucky.html">
+      ✨ 今日のラッキーアイテムを見る
+    </a>
   </div>
 
   <script>
@@ -212,10 +244,11 @@
     }
 
     function draw() {
-      const circle  = document.getElementById('circle');
-      const label   = document.getElementById('label');
-      const comment = document.getElementById('comment');
-      const btn     = document.getElementById('btn');
+      const circle    = document.getElementById('circle');
+      const label     = document.getElementById('label');
+      const comment   = document.getElementById('comment');
+      const btn       = document.getElementById('btn');
+      const luckyLink = document.getElementById('luckyLink');
 
       btn.disabled = true;
       comment.classList.remove('visible');
@@ -243,6 +276,7 @@
             comment.classList.add('visible');
             btn.textContent  = '🎋 もう一度引く';
             btn.disabled     = false;
+            luckyLink.classList.add('visible');
           }, 120);
         }
       }, 60);

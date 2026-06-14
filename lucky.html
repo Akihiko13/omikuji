@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>今日のラッキーアイテム</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+      background: #faf9f7;
+      color: #1a1a1a;
+      min-height: 100dvh;
+      padding: 2.5rem 1.25rem 3rem;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .header {
+      text-align: center;
+      padding-bottom: 0.5rem;
+    }
+
+    .title {
+      font-size: 22px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      color: #1a1a1a;
+    }
+
+    .date {
+      margin-top: 6px;
+      font-size: 13px;
+      color: #888;
+      letter-spacing: 0.04em;
+    }
+
+    .card {
+      background: #fff;
+      border: 0.5px solid #e0ddd8;
+      border-radius: 16px;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.10s; }
+    .card:nth-child(3) { animation-delay: 0.15s; }
+    .card:nth-child(4) { animation-delay: 0.20s; }
+    .card:nth-child(5) { animation-delay: 0.25s; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .icon {
+      font-size: 36px;
+      line-height: 1;
+      flex-shrink: 0;
+      width: 48px;
+      text-align: center;
+    }
+
+    .card-body {
+      flex: 1;
+    }
+
+    .category {
+      font-size: 12px;
+      color: #999;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+
+    .item {
+      font-size: 20px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: #1a1a1a;
+    }
+
+    .item-sub {
+      font-size: 13px;
+      color: #777;
+      margin-top: 3px;
+      line-height: 1.6;
+    }
+
+    .color-swatch {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 0.5px solid rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 0.5rem;
+      font-size: 14px;
+      color: #888;
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      padding: 0.5rem;
+    }
+
+    .back-link:hover {
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 class="title">今日のラッキーアイテム</h1>
+      <p class="date" id="dateLabel"></p>
+    </div>
+
+    <div id="cards"></div>
+
+    <a class="back-link" href="index.html">← おみくじに戻る</a>
+  </div>
+
+  <script>
+    const colors = [
+      { name: "赤",     hex: "#e05040", note: "情熱と行動力を高める色" },
+      { name: "オレンジ", hex: "#e07830", note: "明るさと社交運をアップ" },
+      { name: "黄色",   hex: "#e0c020", note: "金運と直感を高める色" },
+      { name: "緑",     hex: "#40a060", note: "癒しと成長をもたらす色" },
+      { name: "青",     hex: "#3070c0", note: "集中力と信頼感を高める色" },
+      { name: "紫",     hex: "#8050b0", note: "創造性と精神力を高める色" },
+      { name: "ピンク", hex: "#d06080", note: "恋愛運と対人運に効果的" },
+      { name: "白",     hex: "#d8d5cf", note: "浄化と新しいスタートを象徴" },
+      { name: "ゴールド", hex: "#c09030", note: "豊かさと成功を引き寄せる色" },
+      { name: "水色",   hex: "#50a8d0", note: "コミュニケーション運が上昇" },
+    ];
+
+    const foods = [
+      { name: "おにぎり",     note: "シンプルな力を与えてくれる一品" },
+      { name: "ラーメン",     note: "温かさが運気を上昇させる" },
+      { name: "カレー",       note: "スパイスが行動力を刺激する" },
+      { name: "寿司",         note: "新鮮さが良縁を引き寄せる" },
+      { name: "パスタ",       note: "長さが縁をつなぐ縁起食" },
+      { name: "フルーツ",     note: "自然のエネルギーを取り込む" },
+      { name: "チョコレート", note: "甘さが人間関係を円滑にする" },
+      { name: "から揚げ",     note: "揚げ物で運気も上昇気流へ" },
+      { name: "お茶漬け",     note: "落ち着きが判断力を高める" },
+      { name: "プリン",       note: "やさしい甘さが心をほぐす" },
+    ];
+
+    const spots = [
+      { name: "公園",   note: "自然の中でエネルギーをチャージ" },
+      { name: "カフェ", note: "新しいアイデアが生まれやすい場所" },
+      { name: "図書館", note: "知識と静寂が運気を整える" },
+      { name: "神社",   note: "パワースポットで運気をリセット" },
+      { name: "海",     note: "広大さが視野を広げてくれる" },
+      { name: "山",     note: "大地のエネルギーを受け取る場所" },
+      { name: "本屋",   note: "思わぬ出会いが運命を変える" },
+      { name: "美術館", note: "美しいものが感性を磨く" },
+      { name: "商店街", note: "人の活気が開運のカギ" },
+      { name: "映画館", note: "非日常の体験が心を解放する" },
+    ];
+
+    const actions = [
+      "いつもより少し早起きしてみましょう",
+      "誰かに「ありがとう」を伝える日です",
+      "普段と違う道を通ってみましょう",
+      "気になっていたことを今日こそ始めて",
+      "深呼吸を意識して過ごしましょう",
+      "笑顔を一つ多めに心がけてみて",
+      "好きな音楽を聴いてリフレッシュ",
+      "少しだけ早めに休んで体を労って",
+      "直感を信じて行動する日です",
+      "水をたっぷり飲んで体をリセット",
+    ];
+
+    function seededRandom(seed) {
+      let s = seed;
+      return function() {
+        s = (s * 1664525 + 1013904223) & 0xffffffff;
+        return (s >>> 0) / 0xffffffff;
+      };
+    }
+
+    function todaySeed() {
+      const d = new Date();
+      return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+    }
+
+    function pick(arr, rand) {
+      return arr[Math.floor(rand() * arr.length)];
+    }
+
+    const rand  = seededRandom(todaySeed());
+    const color = pick(colors, rand);
+    const food  = pick(foods,  rand);
+    const spot  = pick(spots,  rand);
+    const num   = Math.floor(rand() * 9) + 1;
+    const act   = pick(actions, rand);
+
+    const d = new Date();
+    const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+    document.getElementById('dateLabel').textContent =
+      `${d.getFullYear()}年 ${months[d.getMonth()]} ${d.getDate()}日`;
+
+    const categories = [
+      {
+        icon: '🎨',
+        category: 'ラッキーカラー',
+        item: color.name,
+        note: color.note,
+        extra: `<div class="color-swatch" style="background:${color.hex}"></div>`,
+      },
+      {
+        icon: '🍽️',
+        category: 'ラッキーフード',
+        item: food.name,
+        note: food.note,
+        extra: '',
+      },
+      {
+        icon: '📍',
+        category: 'ラッキースポット',
+        item: spot.name,
+        note: spot.note,
+        extra: '',
+      },
+      {
+        icon: '🔢',
+        category: 'ラッキーナンバー',
+        item: String(num),
+        note: '今日この数字を意識してみて',
+        extra: '',
+      },
+      {
+        icon: '💬',
+        category: '今日のひとこと',
+        item: act,
+        note: '',
+        extra: '',
+      },
+    ];
+
+    const container = document.getElementById('cards');
+    categories.forEach((c, i) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.animationDelay = (0.05 + i * 0.07) + 's';
+      card.innerHTML = `
+        <div class="icon">${c.icon}</div>
+        <div class="card-body">
+          <p class="category">${c.category}</p>
+          <p class="item">${c.item}</p>
+          ${c.note ? `<p class="item-sub">${c.note}</p>` : ''}
+        </div>
+        ${c.extra}
+      `;
+      container.appendChild(card);
+    });
+  </script>
+</body>
+</html>
