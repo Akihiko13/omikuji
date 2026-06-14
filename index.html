@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>おみくじ</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+      background: #faf9f7;
+      color: #1a1a1a;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2.5rem 1.5rem 3rem;
+      gap: 2rem;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .header {
+      text-align: center;
+    }
+
+    .title {
+      font-size: 28px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      color: #1a1a1a;
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      font-size: 13px;
+      color: #888;
+      letter-spacing: 0.04em;
+    }
+
+    .result-circle {
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      border: 2px solid #e0ddd8;
+      background: #f0ede8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.4s ease, background 0.4s ease;
+    }
+
+    .result-circle.revealed {
+      border-width: 3px;
+    }
+
+    .result-circle.shake {
+      animation: shake 0.5s ease;
+    }
+
+    @keyframes shake {
+      0%,100% { transform: rotate(0deg); }
+      20%      { transform: rotate(-5deg); }
+      40%      { transform: rotate(5deg); }
+      60%      { transform: rotate(-3deg); }
+      80%      { transform: rotate(2deg); }
+    }
+
+    @keyframes popIn {
+      0%   { transform: scale(0.7); opacity: 0; }
+      70%  { transform: scale(1.08); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .result-label {
+      font-size: 54px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      line-height: 1;
+      color: #aaa;
+      transition: color 0.3s ease;
+    }
+
+    .result-label.pop {
+      animation: popIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    .comment {
+      font-size: 14px;
+      color: #666;
+      text-align: center;
+      line-height: 1.9;
+      min-height: 3.8em;
+      opacity: 0;
+      transition: opacity 0.4s ease 0.2s;
+      letter-spacing: 0.02em;
+    }
+
+    .comment.visible {
+      opacity: 1;
+    }
+
+    .draw-btn {
+      background: #fff;
+      border: 1px solid #d0cdc8;
+      border-radius: 50px;
+      padding: 14px 52px;
+      font-size: 18px;
+      font-weight: 500;
+      color: #1a1a1a;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s, transform 0.1s, border-color 0.15s;
+    }
+
+    .draw-btn:hover {
+      background: #f0ede8;
+      border-color: #b0ada8;
+    }
+
+    .draw-btn:active {
+      transform: scale(0.96);
+    }
+
+    .draw-btn:disabled {
+      opacity: 0.5;
+      cursor: default;
+      transform: none;
+    }
+
+    /* 結果ごとの色 */
+    .daikichi  { border-color: #c04020 !important; }
+    .daikichi  .result-label { color: #c04020; }
+
+    .chukichi  { border-color: #1a6ab5 !important; }
+    .chukichi  .result-label { color: #1a6ab5; }
+
+    .shokichi  { border-color: #3a7010 !important; }
+    .shokichi  .result-label { color: #3a7010; }
+
+    .suekichi  { border-color: #a05010 !important; }
+    .suekichi  .result-label { color: #a05010; }
+
+    .kyo       { border-color: #888 !important; }
+    .kyo       .result-label { color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 class="title">おみくじ</h1>
+      <p class="subtitle">今日の運勢を占います</p>
+    </div>
+
+    <div class="result-circle" id="circle">
+      <span class="result-label" id="label">？</span>
+    </div>
+
+    <p class="comment" id="comment"></p>
+
+    <button class="draw-btn" id="btn" onclick="draw()">引く</button>
+  </div>
+
+  <script>
+    const results = [
+      {
+        label: "大吉",
+        cls: "daikichi",
+        comment: "最高の運気です。\n思い切って行動すれば、\n望む結果が得られるでしょう。"
+      },
+      {
+        label: "中吉",
+        cls: "chukichi",
+        comment: "運気は上昇中。\n焦らず着実に進めば、\n良い成果が期待できます。"
+      },
+      {
+        label: "小吉",
+        cls: "shokichi",
+        comment: "小さな幸せが積み重なる日。\n日常の中に喜びを\n見つけてみましょう。"
+      },
+      {
+        label: "末吉",
+        cls: "suekichi",
+        comment: "今は準備の時期です。\n焦らず地道に努力すれば、\nやがて花開くでしょう。"
+      },
+      {
+        label: "凶",
+        cls: "kyo",
+        comment: "慎重に行動しましょう。\n無理をせず、\n周囲の意見も大切に。"
+      }
+    ];
+
+    const weights = [20, 30, 25, 15, 10];
+
+    function weightedRandom() {
+      const total = weights.reduce((a, b) => a + b, 0);
+      let r = Math.random() * total;
+      for (let i = 0; i < weights.length; i++) {
+        r -= weights[i];
+        if (r <= 0) return i;
+      }
+      return weights.length - 1;
+    }
+
+    function draw() {
+      const circle  = document.getElementById('circle');
+      const label   = document.getElementById('label');
+      const comment = document.getElementById('comment');
+      const btn     = document.getElementById('btn');
+
+      btn.disabled = true;
+      comment.classList.remove('visible');
+      comment.textContent = '';
+
+      circle.className = 'result-circle shake';
+      label.className  = 'result-label';
+      label.style.fontSize = '54px';
+      label.style.color = '#aaa';
+      label.textContent = '？';
+
+      let count = 0;
+      const roll = setInterval(() => {
+        label.textContent = results[weightedRandom()].label;
+        count++;
+        if (count >= 12) {
+          clearInterval(roll);
+          const result = results[weightedRandom()];
+          setTimeout(() => {
+            circle.className = 'result-circle revealed ' + result.cls;
+            label.className  = 'result-label pop';
+            label.style.color = '';
+            label.textContent = result.label;
+            comment.innerHTML = result.comment.replace(/\n/g, '<br>');
+            comment.classList.add('visible');
+            btn.textContent  = 'もう一度引く';
+            btn.disabled     = false;
+          }, 120);
+        }
+      }, 60);
+    }
+  </script>
+</body>
+</html>
